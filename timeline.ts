@@ -1,9 +1,9 @@
 import { ApexOptions } from "apexcharts";
-import { TfileAndTags } from "./types";
+import { TfileAndTags, ChartsWithOptions } from "./types";
 
 const TAG_TIMELINE = "#timeline";
 
-export function buildTimelineOptions(filesWithTags: Array<TfileAndTags>): ApexOptions {
+export function buildTimeline(filesWithTags: Array<TfileAndTags>): Array<ChartsWithOptions> {
 	const ranges = filesWithTags
 		.filter((f) => f.tags.includes(TAG_TIMELINE))
 		.map((f) => {
@@ -18,33 +18,37 @@ export function buildTimelineOptions(filesWithTags: Array<TfileAndTags>): ApexOp
 			}
 		});
 
-	return {
-		series: [
-			{
-				data: ranges
-			}
-		],
-		chart: {
-			height: 150,
-			type: 'rangeBar',
-			events: {
-				dataPointSelection: (_, __, config) => {
-					const path = ranges[config.dataPointIndex].meta;
-					const file = this.app.vault.getFileByPath(path);
-					this.app.workspace.activeLeaf.openFile(file);
+	return [
+		{
+			name: "YEAR",
+			options: {
+				series: [
+					{
+						data: ranges
+					}
+				],
+				chart: {
+					height: 150,
+					type: 'rangeBar',
+					events: {
+						dataPointSelection: (_, __, config) => {
+							const path = ranges[config.dataPointIndex].meta;
+							const file = this.app.vault.getFileByPath(path);
+							this.app.workspace.activeLeaf.openFile(file);
 
+						},
+					}
 				},
+				plotOptions: {
+					bar: {
+						horizontal: true
+					}
+				},
+				xaxis: {
+					type: 'datetime'
+				}
 			}
-		},
-		plotOptions: {
-			bar: {
-				horizontal: true
-			}
-		},
-		xaxis: {
-			type: 'datetime'
-		}
-	};
+		}]
 }
 
 

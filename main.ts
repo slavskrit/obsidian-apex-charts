@@ -1,20 +1,19 @@
 import ApexCharts from 'apexcharts'
-import { ApexOptions } from "apexcharts";
 import { Plugin, TFile, getAllTags } from "obsidian";
-import { buildTimelineOptions } from "./timeline"
-import { TfileAndTags, ChartType } from "./types";
+import { buildTimeline } from "./timeline"
+import { TfileAndTags, ChartType, ChartsWithOptions } from "./types";
 
 const TAG_TO_ENABLE = "#obsicharts";
 
-function getChartOptions(chartType: ChartType): ApexOptions {
+function getCharts(chartType: ChartType): Array<ChartsWithOptions> {
 	const allDocumentsToProcess = getAllTheDocumentsToWorkWith();
 	// TODO: Add more charts.
 	switch (chartType) {
 		case 'timeline': {
-			return buildTimelineOptions(allDocumentsToProcess);
+			return buildTimeline(allDocumentsToProcess);
 		}
 	}
-	return {};
+	return [];
 }
 
 function getAllTheDocumentsToWorkWith(): TfileAndTags[] {
@@ -41,13 +40,17 @@ export default class ObsiChartsPlugin extends Plugin {
 	async onload() {
 		this.registerMarkdownCodeBlockProcessor("obsicharts", (source, el, _) => {
 			const chartType = source.split('\n')[0];
-			const options = getChartOptions(chartType as ChartType);
-			const chartContainer = el.createDiv();
-			var chart = new ApexCharts(chartContainer, options);
-			// TODO: Figure out why we need this.
-			setTimeout(() => {
-				chart.render();
-			}, 0);
+			const charts: Array<ChartsWithOptions> = getCharts(chartType as ChartType);
+			charts.forEach((chart: ChartsWithOptions) => {
+				const chartContainer = el.createDiv();
+				chartContainer.textContent = chart.name;
+				var apexChart = new ApexCharts(chartContainer, chart.options);
+				// TODO: Figure out why we need this.
+				setTimeout(() => {
+					apexChart.render();
+				}, 0);
+
+			})
 		});
 	}
 }
