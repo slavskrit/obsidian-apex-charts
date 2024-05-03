@@ -2,15 +2,10 @@ import ApexCharts from 'apexcharts'
 import { ApexOptions } from "apexcharts";
 import { Plugin, TFile, getAllTags } from "obsidian";
 
+import { TfileAndTags, CHART_TYPE } from ".types";
+
 const TAG_TO_ENABLE = "#obsicharts";
 const TAG_TIMELINE = "#timeline";
-
-interface TfileAndTags {
-	tfile: TFile,
-	tags: Array<string>
-}
-
-type CHART_TYPE = 'timeline' | 'addMORE';
 
 function buildTimelineOptions(filesWithTags: Array<TfileAndTags>): ApexOptions {
 	const ranges = filesWithTags
@@ -88,28 +83,15 @@ function getAllTheDocumentsToWorkWith(): TfileAndTags[] {
 // TODO: Handle exceptions.
 export default class ObsiChartsPlugin extends Plugin {
 	async onload() {
-		this.registerMarkdownCodeBlockProcessor("obsicharts", (source, el, ctx) => {
-			// console.log('register');
+		this.registerMarkdownCodeBlockProcessor("obsicharts", (source, el, _) => {
 			const chartType = source.split('\n')[0];
 			const options = getChartOptions(chartType);
-			// el.empty();
-			const a = el.createDiv();
-			a.textContent = "test";
-			const t = a.createDiv("TESToaHEAD:refs/heads/master")
-			//
-			// console.log(source, el, ctx);
-			// const a = ctx.addChild("div");
-
-			// console.log(a);
-			var chart = new ApexCharts(t, options);
-			chart.render();
-			// const chartContainer = el.createDiv();
-			// chartContainer.setAttribute("id", "chart")
-			// ctx.addChild(chartContainer);
-			// const chartType = source.split('\n')[0];
-			// const options = getChartOptions(chartType);
-			// var chart = new ApexCharts(document.querySelector("#chart"), options);
-			// chart.render();
+			const chartContainer = el.createDiv();
+			var chart = new ApexCharts(chartContainer, options);
+			// TODO: Figure out why we need this.
+			setTimeout(() => {
+				chart.render();
+			}, 0);
 		});
 	}
 }
