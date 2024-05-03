@@ -1,4 +1,3 @@
-import { ApexOptions } from "apexcharts";
 import { TfileAndTags, TimelineRange, ChartsWithOptions } from "./types";
 
 const TAG_TIMELINE = "#timeline";
@@ -98,9 +97,23 @@ export function buildTimeline(filesWithTags: Array<TfileAndTags>): Array<ChartsW
 						},
 					}
 				},
+				dataLabels: {
+					enabled: true,
+					formatter: function(val, opts) {
+						var label = opts.w.globals.labels[opts.dataPointIndex]
+						return label;
+					},
+					style: {
+						colors: ['#f3f4f5', '#fff']
+					}
+				},
 				plotOptions: {
 					bar: {
-						horizontal: true
+						horizontal: true,
+						distributed: true,
+						dataLabels: {
+							hideOverflowingLabels: false
+						}
 					}
 				},
 				xaxis: {
@@ -109,7 +122,6 @@ export function buildTimeline(filesWithTags: Array<TfileAndTags>): Array<ChartsW
 			}
 		}
 	});
-	console.log(res);
 	return res;
 }
 
