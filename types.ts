@@ -5,6 +5,6 @@ export interface TfileAndTags {
   tags: Array<string>
 }
 
-export type CHART_TYPE = 'timeline' | 'addMORE';
+export type ChartType = 'timeline' | 'addMORE';
 
 
