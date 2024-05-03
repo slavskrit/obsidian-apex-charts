@@ -42,11 +42,12 @@ export default class ObsiChartsPlugin extends Plugin {
 			const chartType = source.split('\n')[0];
 			const charts: Array<ChartsWithOptions> = getCharts(chartType as ChartType);
 			charts.forEach((chart: ChartsWithOptions) => {
-				const chartContainer = el.createDiv();
-				chartContainer.textContent = chart.name;
-				var apexChart = new ApexCharts(chartContainer, chart.options);
 				// TODO: Figure out why we need this.
 				setTimeout(() => {
+					console.log(chart);
+					const chartContainer = el.createDiv();
+					chartContainer.textContent = chart.name;
+					var apexChart = new ApexCharts(chartContainer, chart.options);
 					apexChart.render();
 				}, 0);
 
