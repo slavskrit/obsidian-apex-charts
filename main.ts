@@ -46,12 +46,13 @@ export default class ObsiChartsPlugin extends Plugin {
 			const allDocs = getAllTheDocumentsToWorkWith(tagToDisplay);
 			// TODO: Add more options to timneline. Like should split by year yes/no.
 			const charts: Array<ChartsWithOptions> = getCharts(chartType as ChartType, allDocs);
-			charts.forEach((chart: ChartsWithOptions) => {
+			charts?.forEach((chart: ChartsWithOptions) => {
 				// TODO: Figure out why we need this.
 				setTimeout(() => {
 					const year = el.createDiv();
 					const chartContainer = el.createDiv("chart");
 					year.textContent = chart.name;
+					console.log(chart.options);
 					var apexChart = new ApexCharts(chartContainer, chart.options);
 					apexChart.render();
 				}, 0);

@@ -9,60 +9,88 @@ interface TimelineRange {
 	meta: string,
 }
 
-interface TimelineForApex {
-	x: string,
-	y: Array<number>,
-	meta: string,
+function b(s, e, n) {
+	return {
+		x: n,
+		y: [s, e],
+	}
 }
 
-function dirtyDateNormalizer(date: Date): Date {
-	const isoYear = date.toISOString().split("T")[0];
-	var date = new Date(isoYear)
-	var userTimezoneOffset = date.getTimezoneOffset() * 60000;
-	return new Date(date.getTime() + userTimezoneOffset);
+function dd(d) {
+	return d.toISOString().split('T')[0];
 }
 
+function getOptions(year, series) {
+	return {
+		name: year,
+		options: {
+			series: series,
+			chart: {
+				height: 250,
+				type: 'rangeBar',
+				events: {
+					dataPointSelection: (_, __, config) => {
+						const path = ranges[config.dataPointIndex].meta;
+						const file = this.app.vault.getFileByPath(path);
+						this.app.workspace.activeLeaf.openFile(file);
 
-function splitByYear(ranges: Array<TimelineRange>): Map<number, Array<TimelineForApex>> {
-	const result = new Map<number, Array<TimelineForApex>>;
-	ranges.forEach((t => {
-		const name = t.x;
-		const meta = t.meta;
-		let start = dirtyDateNormalizer(t.y[0]);
-		const realEnd = dirtyDateNormalizer(t.y[1]);
-		while (start.getFullYear() < realEnd.getFullYear()) {
-			let newEnd = new Date(`${start.getFullYear() + 1}-01-01`);
-			const l: Array<TimelineForApex> = result.get(start.getFullYear()) ?? [];
-			l.push(
-				{
-					x: name,
-					y: [start.getTime(), newEnd.getTime()],
-					meta: meta
-				});
-			result.set(start.getFullYear(), l);
-			const nexYear = `${start.getFullYear() + 1}/01/01`;
-			start = new Date(nexYear);
-
-			if (newEnd.getFullYear() == realEnd.getFullYear()) {
-				const l: Array<TimelineForApex> = result.get(start.getFullYear()) ?? [];
-				l.push({
-					x: name,
-					y: [newEnd.getTime(), realEnd.getTime()],
-					meta: meta
-				});
-				result.set(newEnd.getFullYear(), l);
-				break;
+					},
+				}
+			},
+			dataLabels: {
+				enabled: true,
+				formatter: function(_, opts) {
+					var label = opts.w.globals.labels[opts.dataPointIndex]
+					return label;
+				},
+				style: {
+					colors: ['#f3f4f5', '#fff']
+				}
+			},
+			plotOptions: {
+				bar: {
+					horizontal: true,
+					distributed: true,
+					dataLabels: {
+						hideOverflowingLabels: false
+					}
+				}
+			},
+			yaxis: {
+				labels: {
+					maxWidth: 60,
+				}
+			},
+			xaxis: {
+				type: 'datetime',
 			}
 		}
-		const l: Array<TimelineForApex> = result.get(start.getFullYear()) ?? [];
-		l.push({
-			x: name,
-			y: [start.getTime(), realEnd.getTime()],
-			meta: meta
-		});
-		result.set(start.getFullYear(), l);
-	}));
-	return result;
+	}
+};
+
+function splitByYear(r) {
+	let groupedByYears = new Map<number, Array<any>>();
+	r.forEach((t) => {
+		const name = t.x;
+		let startDate = t.y[0];
+		let endDate = t.y[1];
+		let startYear = startDate.getFullYear();
+		let endYear = endDate.getFullYear();
+		let entities = groupedByYears.get(startYear) ?? [];
+		if (startYear < endYear) {
+			while (startYear < endYear) {
+				entities.push(b(startDate, new Date(`${startYear}-12-31`), name));
+				groupedByYears.set(startYear, entities);
+				startYear++;
+				startDate = new Date(`${startYear}-01-01`);
+				entities = groupedByYears.get(startYear) ?? [];
+			}
+		}
+		entities.push(b(startDate, endDate, name));
+		groupedByYears.set(startYear, entities);
+	});
+
+	return groupedByYears;
 }
 
 // TODO: Add more flexibility how to split dates. Now is by year.
@@ -80,56 +108,11 @@ export function buildTimeline(filesWithTags: Array<TfileAndTags>): Array<ChartsW
 				meta: f.tfile.path,
 			}
 		});
-	let grouped = splitByYear(ranges);
-	let years = [...grouped.keys()];
-	years = years.sort((a, b) => a - b);
-	const res = years.map((year) => {
-		return {
-			name: year.toString(),
-			options: {
-				series: [
-					{
-						data: grouped.get(year)
-					}
-				],
-				chart: {
-					height: 150,
-					type: 'rangeBar',
-					events: {
-						dataPointSelection: (_, __, config) => {
-							const path = ranges[config.dataPointIndex].meta;
-							const file = this.app.vault.getFileByPath(path);
-							this.app.workspace.activeLeaf.openFile(file);
-
-						},
-					}
-				},
-				dataLabels: {
-					enabled: true,
-					formatter: function(val, opts) {
-						var label = opts.w.globals.labels[opts.dataPointIndex]
-						return label;
-					},
-					style: {
-						colors: ['#f3f4f5', '#fff']
-					}
-				},
-				plotOptions: {
-					bar: {
-						horizontal: true,
-						distributed: true,
-						dataLabels: {
-							hideOverflowingLabels: false
-						}
-					}
-				},
-				xaxis: {
-					type: 'datetime'
-				}
-			}
-		}
+	const optionsGroupedByYear = [];
+	splitByYear(ranges).forEach((ranges, year: number) => {
+		optionsGroupedByYear.push(getOptions(year, ranges));
 	});
-	return res;
-}
-
+	console.log(optionsGroupedByYear);
+	return optionsGroupedByYear;
+};
 
