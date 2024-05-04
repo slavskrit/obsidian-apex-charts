@@ -1,3 +1,4 @@
+// @ts-ignore
 import ApexCharts from 'apexcharts'
 import { Plugin, TFile, getAllTags } from "obsidian";
 import { buildTimeline } from "./timeline"
@@ -43,7 +44,6 @@ export default class ObsiChartsPlugin extends Plugin {
 			const chartType = config[0];
 			const tagToDisplay = config[1] ?? "";
 			const allDocs = getAllTheDocumentsToWorkWith(tagToDisplay);
-			console.log(allDocs, tagToDisplay);
 			// TODO: Add more options to timneline. Like should split by year yes/no.
 			const charts: Array<ChartsWithOptions> = getCharts(chartType as ChartType, allDocs);
 			charts.forEach((chart: ChartsWithOptions) => {

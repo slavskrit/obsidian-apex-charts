@@ -1,4 +1,5 @@
-import { TfileAndTags, TimelineRange, ChartsWithOptions } from "./types";
+// @ts-nocheck
+import { TfileAndTags, ChartsWithOptions } from "./types";
 
 const TAG_TIMELINE = "#timeline";
 
@@ -14,14 +15,21 @@ interface TimelineForApex {
 	meta: string,
 }
 
+function dirtyDateNormalizer(date: Date): Date {
+	const isoYear = date.toISOString().split("T")[0];
+	var date = new Date(isoYear)
+	var userTimezoneOffset = date.getTimezoneOffset() * 60000;
+	return new Date(date.getTime() + userTimezoneOffset);
+}
+
 
 function splitByYear(ranges: Array<TimelineRange>): Map<number, Array<TimelineForApex>> {
 	const result = new Map<number, Array<TimelineForApex>>;
 	ranges.forEach((t => {
 		const name = t.x;
 		const meta = t.meta;
-		let start = t.y[0];
-		const realEnd = t.y[1];
+		let start = dirtyDateNormalizer(t.y[0]);
+		const realEnd = dirtyDateNormalizer(t.y[1]);
 		while (start.getFullYear() < realEnd.getFullYear()) {
 			let newEnd = new Date(`${start.getFullYear() + 1}-01-01`);
 			const l: Array<TimelineForApex> = result.get(start.getFullYear()) ?? [];
@@ -73,12 +81,11 @@ export function buildTimeline(filesWithTags: Array<TfileAndTags>): Array<ChartsW
 			}
 		});
 	let grouped = splitByYear(ranges);
-	console.log(grouped);
 	let years = [...grouped.keys()];
 	years = years.sort((a, b) => a - b);
 	const res = years.map((year) => {
 		return {
-			name: year,
+			name: year.toString(),
 			options: {
 				series: [
 					{
